@@ -1,0 +1,4 @@
+# El recolector del Módulo 1 solo usa la biblioteca estándar de Python.
+# Flask se usará al construir el panel web en un módulo posterior.
+Flask>=3.0,<4.0
+

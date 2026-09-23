@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-SIEM | Acceso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body class="login-page">
+    <main class="login-card">
+      <div class="shield">◈</div>
+      <p class="eyebrow">LABORATORIO LOCAL</p>
+      <h1>Mini-SIEM</h1>
+      <p class="muted">Accede a la consola de monitoreo.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <p class="message {{ category }}">{{ message }}</p>
+        {% endfor %}
+      {% endwith %}
+      <form method="post" class="login-form">
+        <label for="username">Usuario</label>
+        <input id="username" name="username" autocomplete="username" required autofocus>
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" name="password" autocomplete="current-password" required>
+        <button type="submit">Entrar al panel</button>
+      </form>
+    </main>
+  </body>
+</html>
+

@@ -1,0 +1,11 @@
+{
+  "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+  "python.testing.unittestEnabled": true,
+  "python.testing.unittestArgs": ["-v", "-s", "tests", "-p", "test_*.py"],
+  "python.testing.cwd": "${workspaceFolder}",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "instance": true
+  }
+}
+

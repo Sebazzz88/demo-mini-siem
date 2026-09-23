@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-SIEM | Panel de seguridad</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script defer src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
+    <script>window.MINI_SIEM_DATA = {{ dashboard|tojson }};</script>
+    <script defer src="{{ url_for('static', filename='dashboard.js') }}"></script>
+  </head>
+  <body class="app-page">
+    <aside class="sidebar">
+      <a class="brand" href="{{ url_for('dashboard') }}"><span>◈</span> MINI-SIEM</a>
+      <nav><a class="active" href="{{ url_for('dashboard') }}">Visión general</a><a href="#alerts">Alertas</a><a href="#collector">Recolector</a></nav>
+      <div class="sidebar-footer">LOCAL · HISTÓRICO SQLITE</div>
+    </aside>
+    <main class="content">
+      <header class="topbar"><div><p class="eyebrow">MONITOREO LOCAL ACTIVO</p><h1>Centro de seguridad</h1></div><form method="post" action="{{ url_for('logout') }}"><button class="secondary" type="submit">Cerrar sesión</button></form></header>
+      {% if default_password %}<section class="security-notice"><strong>Cambia la clave inicial.</strong> Define <code>MINISIEM_PASSWORD</code> antes de usar logs reales.</section>{% endif %}
+      {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<p class="message {{ category }}">{{ message }}</p>{% endfor %}{% endwith %}
+
+      <section class="metrics" aria-label="Resumen de alertas">
+        <article class="metric-card"><span>Eventos históricos</span><strong id="total-events">{{ dashboard.total_events }}</strong><small>guardados en SQLite</small></article>
+        <article class="metric-card accent-red"><span>Alertas altas</span><strong id="severity-alta">{{ dashboard.severity.alta }}</strong><small>requieren atención</small></article>
+        <article class="metric-card accent-yellow"><span>Alertas medias</span><strong id="severity-media">{{ dashboard.severity.media }}</strong><small>actividad sospechosa</small></article>
+        <article class="metric-card accent-green"><span>Alertas bajas</span><strong id="severity-baja">{{ dashboard.severity.baja }}</strong><small>informativas</small></article>
+      </section>
+
+      <section class="charts-grid">
+        <article class="panel chart-panel wide"><div class="panel-heading"><div><p class="eyebrow">TENDENCIA</p><h2>Ataques por tiempo</h2></div><div class="chart-toggle"><button class="secondary selected" data-period="hourly" type="button">Por hora</button><button class="secondary" data-period="daily" type="button">Por día</button></div></div><canvas id="activity-chart"></canvas></article>
+        <article class="panel chart-panel"><div class="panel-heading"><div><p class="eyebrow">ORIGEN</p><h2>Top 10 IPs</h2></div></div><canvas id="ips-chart"></canvas></article>
+        <article class="panel chart-panel"><div class="panel-heading"><div><p class="eyebrow">DETECCIÓN</p><h2>Tipos de ataque</h2></div></div><canvas id="types-chart"></canvas></article>
+      </section>
+
+      <section id="alerts" class="panel alerts-panel"><div class="panel-heading"><div><p class="eyebrow">ALERTAS RECIENTES</p><h2>Hallazgos de las reglas</h2></div><span class="live-dot">Refresco cada 10 s</span></div><div class="table-wrap"><table><thead><tr><th>Severidad</th><th>Tipo</th><th>IP origen</th><th>Hora</th><th>Detalle</th></tr></thead><tbody id="alerts-body">{% for alert in alerts %}<tr><td><span class="severity {{ alert.severity }}">{{ alert.severity }}</span></td><td>{{ alert.attack_type }}</td><td>{{ alert.source_ip }}</td><td>{{ alert.timestamp }}</td><td>{{ alert.detail }}</td></tr>{% else %}<tr class="empty"><td colspan="5">Sin alertas todavía. Genera la demo para comprobar las cuatro reglas.</td></tr>{% endfor %}</tbody></table></div></section>
+
+      <section id="collector" class="actions-grid"><article class="panel action-panel"><div class="panel-heading"><div><p class="eyebrow">PRUEBA SEGURA</p><h2>Generar demo</h2></div><span class="badge">LOCAL</span></div><p>Crea 31 eventos ficticios y prueba las cuatro reglas sin enviar tráfico a una red.</p><form method="post" action="{{ url_for('create_demo') }}"><button type="submit">Generar demo y alertas</button></form></article><article class="panel action-panel"><div class="panel-heading"><div><p class="eyebrow">FUENTES PERMITIDAS</p><h2>Importar logs</h2></div><span class="badge outline">HISTÓRICO</span></div><p>Lee archivos de las carpetas configuradas en <code>MINISIEM_LOG_DIRECTORIES</code>.</p><form method="post" action="{{ url_for('collect_logs') }}" class="collect-form"><label for="auth_log_path">SSH</label><input id="auth_log_path" name="auth_log_path" placeholder="/var/log/auth.log"><label for="web_log_path">Apache o Nginx</label><input id="web_log_path" name="web_log_path" placeholder="/var/log/nginx/access.log"><label for="firewall_log_path">UFW / Firewall</label><input id="firewall_log_path" name="firewall_log_path" placeholder="/var/log/ufw.log"><button type="submit">Procesar logs</button></form></article></section>
+
+      <section class="panel events-panel"><div class="panel-heading"><div><p class="eyebrow">TELEMETRÍA RECIENTE</p><h2>Eventos normalizados</h2></div><span class="status-label">Telegram: {{ 'configurado' if telegram_configured else 'no configurado' }}</span></div><div class="table-wrap"><table><thead><tr><th>Hora</th><th>Fuente</th><th>IP origen</th><th>Evento</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody id="events-body">{% for event in events %}<tr><td>{{ event.timestamp }}</td><td><span class="source {{ event.source }}">{{ event.source }}</span></td><td>{{ event.ip }}</td><td>{{ event.event_type }}</td><td>{{ event.outcome }}</td><td>{{ event.path or event.username or event.target_port or '—' }}</td></tr>{% else %}<tr class="empty"><td colspan="6">Aún no hay datos. Genera la demo para ver el flujo completo.</td></tr>{% endfor %}</tbody></table></div></section>
+    </main>
+  </body>
+</html>
+
